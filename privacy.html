@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <title>Конфиденциальность — Obsidian Mobile Sync</title>
+</head>
+<body>
+  <main>
+    <p class="eyebrow"><a href="index.html">Obsidian Mobile Sync</a></p>
+    <h1>Конфиденциальность</h1>
+    <p class="meta">Обновлено: 11 ноября 2026 года</p>
+    <p>Obsidian Mobile Sync — личная настройка плагина GSync и Google OAuth для синхронизации собственных заметок. Сайт поддерживается владельцем аккаунта <a href="https://github.com/ASPredein" rel="noreferrer">ASPredein</a>.</p>
+    <section aria-labelledby="drive">
+      <h2 id="drive">Google Drive и устройства</h2>
+      <p>Плагин получает доступ к содержимому и метаданным файлов Google Drive, чтобы сравнивать версии и синхронизировать выбранную папку с локальным хранилищем Obsidian. Включённая передача удалений позволяет перемещать удалённые файлы в корзину.</p>
+      <p>Запрашиваемые права распространяются на весь Google Drive; ограничение выбранной папкой обеспечивает GSync. Обмен файлами происходит напрямую между устройством и API Google. Заметки и вложения не отправляются на этот сайт или на callback автора плагина.</p>
+      <p>Client secret и OAuth-токены сохраняются GSync в настройках на устройстве. Обмен кода на токены и обновление токенов выполняются плагином напрямую с Google. Эта страница их не запрашивает и не получает.</p>
+    </section>
+    <section aria-labelledby="callback">
+      <h2 id="callback">Страница возврата</h2>
+      <p>Google направляет браузер на callback с одноразовым кодом и параметром state. State содержит случайное значение и закодированное имя хранилища. При отмене входа вместо кода может передаваться идентификатор ошибки.</p>
+      <p>Скрипт страницы возвращает эти параметры в установленный Obsidian через ссылку obsidian://gsync-auth. Он очищает query-параметры из текущего адреса браузера, не записывает данные в cookies или локальное хранилище, не отправляет сетевые запросы и не использует аналитику. Страница не показывает код или state в тексте.</p>
+      <p>GSync применяет PKCE: проверочное значение для обмена кода остаётся на исходном устройстве. Сам callback не обменивает код на токены.</p>
+    </section>
+    <section aria-labelledby="hosting">
+      <h2 id="hosting">Хостинг GitHub Pages</h2>
+      <p>Сайт размещён на GitHub Pages. Первоначальный HTTPS-запрос содержит адрес callback с query-параметрами, поэтому инфраструктура GitHub получает этот запрос, IP-адрес и стандартные сведения HTTP. Очистка адресной строки не удаляет уже обработанные сервером сведения.</p>
+      <p>Владелец сайта не добавляет собственное серверное журналирование. Обработка и хранение служебных данных хостинга регулируются <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noreferrer">политикой GitHub</a>. Для аккаунта и файлов Drive действуют <a href="https://policies.google.com/privacy" rel="noreferrer">правила Google</a>.</p>
+    </section>
+    <section aria-labelledby="control">
+      <h2 id="control">Контроль и удаление</h2>
+      <p>Доступ приложения можно отозвать в <a href="https://myaccount.google.com/connections" rel="noreferrer">настройках подключений Google</a>. После этого новые обращения GSync к Google потребуют повторного разрешения.</p>
+      <p>Чтобы остановить работу на устройстве, отключи GSync. Локальные настройки, включая сохранённые токены, удаляются вместе с данными плагина; файлы заметок и копии в Drive управляются отдельно. Отключение плагина само по себе не удаляет заметки из Drive.</p>
+      <p>Этот личный инструмент не использует данные Google для рекламы, продажи данных или обучения моделей. По вопросам сайта можно обратиться через <a href="https://github.com/ASPredein/obsidian-gsync-pages/issues" rel="noreferrer">репозиторий проекта</a>, не прикладывая коды входа, секреты, токены или содержимое заметок.</p>
+    </section>
+    <footer><a href="index.html">Об приложении</a></footer>
+  </main>
+</body>
+</html>

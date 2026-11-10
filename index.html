@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <title>Obsidian Mobile Sync</title>
+  <meta name="description" content="Личная синхронизация Obsidian через Google Drive и GSync.">
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Личный инструмент</p>
+    <h1>Obsidian Mobile Sync</h1>
+    <p class="lead">Синхронизация заметок Obsidian между компьютером, Android и iPad через Google Drive.</p>
+    <section aria-labelledby="how">
+      <h2 id="how">Как это работает</h2>
+      <p>На мобильных устройствах используется плагин GSync. Он обменивается файлами напрямую с Google Drive. На компьютере папку синхронизирует Google Drive for Desktop.</p>
+      <p>Этот сайт помогает завершить вход в Google: страница callback возвращает одноразовый код в установленный Obsidian. На сайте нет формы для пароля, Client secret или токенов.</p>
+    </section>
+    <section aria-labelledby="signin">
+      <h2 id="signin">Вход</h2>
+      <p>Начинай вход из настроек GSync на том устройстве, которое подключаешь. После подтверждения в Google браузер вернёт тебя в Obsidian.</p>
+      <a class="button" href="callback.html">О странице возврата</a>
+    </section>
+    <section aria-labelledby="scope">
+      <h2 id="scope">Доступ к файлам</h2>
+      <p>GSync запрашивает область доступа Google Drive, которая позволяет читать, создавать, изменять и удалять файлы во всём Drive. Это нужно плагину, чтобы видеть уже существующие файлы. Выбор папки ограничивает работу плагина, но не выданные Google права.</p>
+      <p>Приложение предназначено для личного использования владельцем аккаунта <a href="https://github.com/ASPredein" rel="noreferrer">ASPredein</a>. Регистрации других пользователей и публичного сервиса здесь нет.</p>
+    </section>
+    <footer>
+      <a href="privacy.html">Политика конфиденциальности</a>
+      <a href="https://github.com/dg0988/ObsidianGSync" rel="noreferrer">Исходный код GSync</a>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PB8GS8IujA0/j0b8eswT+4D6t5T5Dvll5EiaBF8VQWI='; style-src 'sha256-KivV1bkuhZYIwA5HQARydkR/YqB7jky4hkOzkHhUhgA='; img-src data:; base-uri 'none'; form-action 'none'">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235a49b6'/%3E%3Cpath d='M10 8h12v16H10z' fill='white'/%3E%3C/svg%3E">
+  <title>Вход в Obsidian</title>
+  <!--
+    Independent implementation of the GSync callback protocol.
+    Protocol reference: GSync 1.0.4, commit
+    568016625ba0b77ab06e0718a48bb5eb39275f37:
+    https://github.com/dg0988/ObsidianGSync/tree/568016625ba0b77ab06e0718a48bb5eb39275f37
+    docs/callback.html, src/auth.ts, src/main.ts.
+    This static page does not configure hosting headers or request logging.
+  -->
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; }
+    body { min-height: 100svh; margin: 0; padding: 24px; display: grid; place-items: center; background: #f5f4f9; color: #242236; }
+    main { width: min(100%, 480px); padding: 36px; border: 1px solid #e2dfec; border-radius: 20px; background: #fff; }
+    .label { margin: 0 0 12px; color: #675c88; font-size: 14px; }
+    h1 { margin: 0 0 16px; font-size: 27px; line-height: 1.2; }
+    p { margin: 0; line-height: 1.6; }
+    #message { color: #615c70; }
+    #open { display: block; margin-top: 24px; padding: 13px 18px; border-radius: 10px; background: #5a49b6; color: #fff; text-decoration: none; text-align: center; font-weight: 600; }
+    #open:focus-visible { outline: 3px solid #9d8ced; outline-offset: 4px; }
+    .hint { margin-top: 20px; color: #716b7e; font-size: 13px; }
+    [hidden] { display: none !important; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #181620; color: #f1edf8; }
+      main { background: #221f2d; border-color: #393244; }
+      .label { color: #b9a8e2; }
+      #message, .hint { color: #c3bacc; }
+      #open { background: #7961d2; }
+    }
+    @media (max-width: 400px) { main { padding: 26px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="label">Синхронизация заметок</p>
+    <h1 id="title">Вход в Obsidian</h1>
+    <p id="message" role="status" aria-live="polite">Откройте настройки GSync в Obsidian и начните вход оттуда.</p>
+    <a id="open" hidden>Открыть Obsidian</a>
+    <p id="hint" class="hint" hidden>Эта ссылка действует две минуты.</p>
+    <noscript><p class="hint">Для возврата в Obsidian включите JavaScript и начните вход заново.</p></noscript>
+  </main>
+  <script>
+    (() => {
+      "use strict";
+
+      let params;
+      try {
+        params = new URLSearchParams(window.location.search);
+        // Clear the current browser URL before processing the response.
+        window.history.replaceState(null, "", window.location.pathname);
+      } catch {
+        document.getElementById("message").textContent = "Не удалось подготовить возврат в Obsidian. Начните вход заново в настройках GSync.";
+        return;
+      }
+
+      const title = document.getElementById("title");
+      const message = document.getElementById("message");
+      const open = document.getElementById("open");
+      const hint = document.getElementById("hint");
+      const empty = params.toString() === "";
+      const stateCount = params.getAll("state").length;
+      const codeCount = params.getAll("code").length;
+      const errorCount = params.getAll("error").length;
+      let state = params.get("state");
+      let code = params.get("code");
+      let error = params.get("error");
+      params = null;
+      if (empty) return;
+
+      const success = codeCount === 1 && errorCount === 0 && Boolean(code);
+      const failure = errorCount === 1 && codeCount === 0 && Boolean(error);
+      let vault = null;
+      let match = null;
+
+      function decodeBase64url(value) {
+        const padding = "=".repeat((4 - value.length % 4) % 4);
+        const binary = window.atob(value.replace(/-/g, "+").replace(/_/g, "/") + padding);
+        const canonical = window.btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        if (canonical !== value) throw new Error("Invalid encoding");
+        return Uint8Array.from(binary, character => character.charCodeAt(0));
+      }
+
+      try {
+        if (stateCount !== 1 || (!success && !failure) || !state || state.length > 16384 || (code && code.length > 8192) || (error && error.length > 1024)) {
+          throw new Error("Invalid response");
+        }
+        match = /^([A-Za-z0-9_-]{22})~([A-Za-z0-9_-]+)$/.exec(state);
+        if (!match || decodeBase64url(match[1]).length !== 16) throw new Error("Invalid state");
+        vault = new TextDecoder("utf-8", { fatal: true }).decode(decodeBase64url(match[2]));
+        if (!vault || /[\u0000-\u001f\u007f]/u.test(vault)) throw new Error("Invalid vault");
+      } catch {
+        state = code = error = vault = match = null;
+        title.textContent = "Не удалось завершить вход";
+        message.textContent = "Откройте настройки GSync в Obsidian и начните вход заново на этом устройстве.";
+        return;
+      }
+
+      let outgoing = new URLSearchParams();
+      outgoing.set("vault", vault);
+      outgoing.set("state", state);
+      if (success) outgoing.set("code", code);
+      else outgoing.set("error", error);
+      let destination = "obsidian://gsync-auth?" + outgoing.toString();
+      state = code = error = vault = match = outgoing = null;
+
+      const expiresAt = Date.now() + 120000;
+      let active = true;
+      let automaticTimer = null;
+      let expirationTimer = null;
+
+      function expire() {
+        if (!active) return;
+        active = false;
+        if (automaticTimer !== null) window.clearTimeout(automaticTimer);
+        if (expirationTimer !== null) window.clearTimeout(expirationTimer);
+        automaticTimer = expirationTimer = null;
+        destination = null;
+        open.removeAttribute("href");
+        open.hidden = true;
+        hint.hidden = true;
+        title.textContent = "Ссылка больше не активна";
+        message.textContent = "Если вход ещё не завершён, откройте настройки GSync в Obsidian и начните его заново.";
+        window.removeEventListener("pageshow", checkExpiry);
+        window.removeEventListener("focus", checkExpiry);
+        document.removeEventListener("visibilitychange", checkExpiry);
+      }
+
+      function checkExpiry() {
+        if (active && Date.now() >= expiresAt) expire();
+        return !active;
+      }
+
+      open.addEventListener("click", event => {
+        if (checkExpiry()) event.preventDefault();
+      });
+      // Mobile browsers can suspend timers while Obsidian is in the foreground.
+      window.addEventListener("pageshow", checkExpiry);
+      window.addEventListener("focus", checkExpiry);
+      document.addEventListener("visibilitychange", checkExpiry);
+
+      open.href = destination;
+      open.hidden = false;
+      hint.hidden = false;
+      title.textContent = success ? "Возвращаемся в Obsidian" : "Вход не завершён";
+      message.textContent = success
+        ? "Если приложение не открылось само, нажмите кнопку ниже."
+        : "Вернитесь в Obsidian, чтобы завершить эту попытку и при необходимости начать вход заново.";
+
+      expirationTimer = window.setTimeout(expire, 120000);
+      if (success) {
+        automaticTimer = window.setTimeout(() => {
+          automaticTimer = null;
+          if (checkExpiry()) return;
+          try { window.location.assign(destination); } catch { /* The manual link remains available. */ }
+        }, 500);
+      }
+    })();
+  </script>
+</body>
+</html>
