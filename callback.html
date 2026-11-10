@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PB8GS8IujA0/j0b8eswT+4D6t5T5Dvll5EiaBF8VQWI='; style-src 'sha256-KivV1bkuhZYIwA5HQARydkR/YqB7jky4hkOzkHhUhgA='; img-src data:; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NSS28I4kvDGAZDKiGQ1q/LDQZHGTO4CQdjFLIE/2u5k='; style-src 'sha256-KivV1bkuhZYIwA5HQARydkR/YqB7jky4hkOzkHhUhgA='; img-src data:; base-uri 'none'; form-action 'none'">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235a49b6'/%3E%3Cpath d='M10 8h12v16H10z' fill='white'/%3E%3C/svg%3E">
   <title>Вход в Obsidian</title>
   <!--
@@ -108,7 +108,8 @@
       outgoing.set("state", state);
       if (success) outgoing.set("code", code);
       else outgoing.set("error", error);
-      let destination = "obsidian://gsync-auth?" + outgoing.toString();
+      // Obsidian URI requires percent-encoded spaces, not form-encoded plus signs.
+      let destination = "obsidian://gsync-auth?" + outgoing.toString().replace(/\+/g, "%20");
       state = code = error = vault = match = outgoing = null;
 
       const expiresAt = Date.now() + 120000;
